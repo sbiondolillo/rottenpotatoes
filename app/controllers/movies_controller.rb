@@ -15,6 +15,7 @@ class MoviesController < ApplicationController
     @movies = Movie.order(@sort)
     @title_class = "hilite" if @sort == "title"
     @release_class = "hilite" if @sort == "release_date"
+    @all_ratings = Movie.ratings
   end
 
   def new
