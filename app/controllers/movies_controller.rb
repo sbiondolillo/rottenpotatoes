@@ -11,16 +11,37 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = Movie.all_ratings
-    @sort = params[:sort] || :id
-    
-    @movie_title_class = "hilite" if @sort == "title"
+    # Select sort method then store it in session hash
+    # Try to use user input, then fall back to existing session, then fall back to default
+    if params[:sort]
+      @sort = params[:sort]
+    elsif session[:sort]
+      @sort = session[:sort]
+    else
+      @sort = :id
+    end
+    session[:sort] = @sort
+    # Select ratings to display then store them in session hash.
+    # Try to use user input, then fall back to existing session, then fall back to default
+    @all_ratings = Movie.ratings
+    if params[:ratings]
+      @selected = params[:ratings]
+    elsif session[:selected]
+      @selected = session[:selected]
+    else
+      @selected = @all_ratings
+    end
+    session[:selected] = @selected
+    # Highlight the selected sort column
+    @title_class = "hilite" if @sort == "title"
     @release_date_class = "hilite" if @sort == "release_date"
-    
-    @selected = @all_ratings
-    @selected = params[:ratings].keys if params[:ratings]
-    @movies = Movie.where(rating: @selected).order(@sort)
-
+    # Filter database per user selections
+    @movies = Movie.where(rating: @selected.keys).order(@sort)
+    # Build up complete RESTful URI regardless of user input
+    if params[:sort].nil? || params[:ratings].nil?
+      flash.keep
+      redirect_to movies_path(:sort => @sort, :ratings => @selected) and return
+    end
   end
 
   def new
